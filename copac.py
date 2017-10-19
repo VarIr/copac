@@ -55,7 +55,7 @@ def copac(X, ...):
     Sigma_C = np.cov(X[:, features], rowvar=False, ddof=0)
 
     # Decompose spsd matrix
-    V_C, E_C = LA.eig(Sigma_C)
+    V_C, E_C = LA.eigh(Sigma_C)
     E_C = np.diag(E_C)
     return
 
