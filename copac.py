@@ -13,6 +13,7 @@ COPAC: Correlation Partition Clustering
 
 import numpy as np
 from scipy import sparse
+from scipy import linalg as LA
 
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils import check_array, check_consistent_length
@@ -48,6 +49,14 @@ def copac(X, ...):
     
     X = check_array(X, accept_sparse='csr')
     raise NotImplementedError
+
+    # Corr. cluster cov. matrix
+    features = [0, 1, 2, ...]   # subset of dimensions
+    Sigma_C = np.cov(X[:, features], rowvar=False, ddof=0)
+
+    # Decompose spsd matrix
+    V_C, E_C = LA.eig(Sigma_C)
+    E_C = np.diag(E_C)
     return
 
 
