@@ -10,6 +10,7 @@ COPAC: Correlation Partition Clustering
 #         ... <>
 #
 # License: ...
+from multiprocessing import cpu_count
 
 import numpy as np
 from scipy import sparse
@@ -17,9 +18,10 @@ from scipy import linalg as LA
 
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.utils import check_array, check_consistent_length
+from sklearn.neighbors import NearestNeighbors
 
 
-def copac(X, ...):
+def copac(X, alpha=0.85, n_neighbors=5, metric='minkowski'...):
     """Perform COPAC clustering from vector array.
     Read more in the :ref:`User Guide <copac>`.
 
@@ -27,6 +29,14 @@ def copac(X, ...):
     ----------
     X : array of shape (n_samples, n_features)
         A feature array.
+    alpha : float in ]0,1[, optional, default=0.85
+        Threshold of how much variance needs to be explained by Eigenvalues
+    metric : str, optional, default='minkowski'
+        Distance metric for nearest neighbor search
+    n_neighbors : int, optional, default=5
+        Size of local neighborhood for local correlation dimensionality
+    n_jobs : int, optional, default=1
+        Number of parallel processes. Use all cores with n_jobs=-1.
     ... : other parameters
         TBA
     Returns
@@ -48,15 +58,36 @@ def copac(X, ...):
     """
     
     X = check_array(X, accept_sparse='csr')
+    n, d = X.shape
+    if n_jobs == -1:
+        n_jobs = cpu_count()
     raise NotImplementedError
 
-    # Corr. cluster cov. matrix
-    features = [0, 1, 2, ...]   # subset of dimensions
-    Sigma_C = np.cov(X[:, features], rowvar=False, ddof=0)
+    lambda_ = np.zeros(n, dtype=int)
+    # Get nearest neighbors
+    nn = NearestNeighbors(n_neighbors=n_neighbors, metric=metric, 
+                          n_jobs=n_jobs)
+    knns = nn.kneighbors(return_distances=False)
+    for P, knn in enumerate(knns):
+        N_P = X[knn]
+        
+        # Corr. cluster cov. matrix
+        # TODO Is this an input parameter?
+        features = ... #[0, 1, 2, ...]   # subset of dimensions
+        Sigma_C = np.cov(N_P[:, features], rowvar=False, ddof=0)
 
-    # Decompose spsd matrix
-    V_C, E_C = LA.eigh(Sigma_C)
-    E_C = np.diag(E_C)
+        # Decompose spsd matrix, and sort Eigenvalues descending
+        V_C, E_C = LA.eigh(Sigma_C)
+        E_C = np.sort(E_C)[::-1]
+
+        # Local correlation dimension
+        explanation_portion = np.cumsum(E_C) / E_C.sum()
+        lambda_[P] = np.searchsorted(explanation_portion, alpha, side='left')
+    # Group pts by corr. dim.
+    argsorted = np.argsort(lambda_)
+    edges, _ = np.histogram(lambda_[argsorted], bins=d)
+    D = np.split(argsorted, edges)
+    
     return
 
 
@@ -66,6 +97,10 @@ class COPAC(BaseEstimator, ClusterMixin):
     Parameters
     ----------
     ...
+    alpha : float in ]0,1[, optional, default=0.85
+        Threshold of how much variance needs to be explained by Eigenvalues
+    n_neighbors : int, optional, default=5
+        Size of local neighborhood for local correlation dimensionality
     Attributes
     ----------
     ...
@@ -81,7 +116,9 @@ class COPAC(BaseEstimator, ClusterMixin):
     Minnesota, USA (2007), pp. 413–418.
     """
 
-    def __init__(self, ...):
+    def __init__(self, alpha=0.85, n_neighbors=5, ...):
+        self.alpha = alpha
+        self.n_neighbors = n_neighbors
         #self.param0 = param0
         pass
 
