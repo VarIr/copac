@@ -164,3 +164,64 @@ class COPAC(BaseEstimator, ClusterMixin):
         """
         self.fit(X, sample_weight=sample_weight)
         return self.labels_
+
+
+def _gdbscan(X, n_pred, min_card, w_card):
+	""" TODO write docstring
+
+	Parameters
+	----------
+	X : array of shape (n_samples, n_features)
+		A feature array.
+	n_pred : ...
+		...
+	min_card : ...
+		...
+	w_card : ...
+		...
+
+	Returns
+	-------
+	...
+    """
+    NOISE = -2
+    UNCLASSIFIED = -1
+    n, d = X.shape
+    y = UNCLASSIFIED * np.ones(n, dtype=np.uint32)
+    noise = range(n)
+    cluster_id = next(noise)
+    for i, object_ in enumerate(X):
+		if y[i] == UNCLASSIFIED:
+			if _gdbscan_expand_cluster(X, y, i, cluster_id, n_pred, 
+				min_card, w_card, UNCLASSIFIED, NOISE):
+				cluster_id = next(noise)
+	return y
+
+def _gdbscan_expand_cluster(X, y, i, cluster_id, n_pred, min_card, 
+							w_card, UNCLASSIFIED, NOISE):
+	""" TODO write (short) docstring """
+	if w_card(object_) <= 0:
+		y[i] = UNCLASSIFIED
+		return False
+
+	seeds = _gdbscan_neighborhood(X, i, n_pred)
+	if w_card(seeds) < min_card:
+		y[i] = NOISE
+		return False
+
+	y[i] = cluster_id
+	seeds.delete(i)
+	while len(seeds):
+		j = seeds[0]
+		result = _gdbscan_neighborhood(X, j, n_pred)
+		if w_card(result) >= min_card:
+			for P in result:
+				if w_card(P) > 0 and y[P] < 0:
+					if y[P] == UNCLASSIFIED:
+						seeds.append(P)
+					y[P] = cluster_id
+		seeds.delete(j)
+	return True
+
+
+
