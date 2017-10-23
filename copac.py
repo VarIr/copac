@@ -21,6 +21,42 @@ from sklearn.utils import check_array, check_consistent_length
 from sklearn.neighbors import NearestNeighbors
 
 
+def _cdist_P(P, Q, Mhat_P):
+    """ TODO write docstring 
+
+    Parameters
+    ----------
+    ...
+    Returns
+    -------
+    ...
+    Notes
+    -----
+    The squareroot of cdist is taken later. The advantage here is to
+    save some computation, as we can first take the maximum of
+    two cdists, and then take the root of the 'winner' only.
+    """
+    PQ_diff = P - Q
+    return PQ_diff @ Mhat_P @ PQ_diff.T
+
+def _cdist(P, Q, Mhat_P, Mhat_Q):
+    """ TODO write docstring
+
+    Parameters
+    ----------
+    ...
+    Returns
+    -------
+    ...
+    Notes
+    -----
+    The sqrt is taken of the maximum distance only.
+    """
+    dist_PQ = _cdist_P(P, Q, Mhat_P)
+    dist_QP = _cdist_P(Q, P, Mhat_Q)
+    max_dist = np.max([dist_PQ, dist_QP])
+    return np.sqrt(max_dist)
+
 def copac(X, alpha=0.85, n_neighbors=5, metric='minkowski'...):
     """Perform COPAC clustering from vector array.
     Read more in the :ref:`User Guide <copac>`.
@@ -63,7 +99,10 @@ def copac(X, alpha=0.85, n_neighbors=5, metric='minkowski'...):
         n_jobs = cpu_count()
     raise NotImplementedError
 
+    # Calculating M^ just once requires lots of memory...
     lambda_ = np.zeros(n, dtype=int)
+    M_hat = list()
+
     # Get nearest neighbors
     nn = NearestNeighbors(n_neighbors=n_neighbors, metric=metric, 
                           n_jobs=n_jobs)
@@ -83,11 +122,28 @@ def copac(X, alpha=0.85, n_neighbors=5, metric='minkowski'...):
         # Local correlation dimension
         explanation_portion = np.cumsum(E_C) / E_C.sum()
         lambda_[P] = np.searchsorted(explanation_portion, alpha, side='left')
+
+        # Correlation distance matrix
+        E_hat = (np.arange(d) > lambda_[P]).astype(int)
+        M_hat.append(V_C @ np.diag(E_hat) @ V_C.T)
+
     # Group pts by corr. dim.
     argsorted = np.argsort(lambda_)
     edges, _ = np.histogram(lambda_[argsorted], bins=d)
-    D = np.split(argsorted, edges)
+    Ds = np.split(argsorted, edges)
     
+    for D in Ds:
+        n_D = D.shape[0]
+        cdist_P = -np.ones(n_D * (n_D - 1)), dtype=np.float)
+        cdist_Q = cdist_P.copy()
+        ind = 0
+        for i, p in enumerate(D):
+            # TODO vectorize inner loop
+            for j, q in enumerate(D):
+                cdist_P[ind] = _cdist_P(X[p], X[q], M_hat[p])
+                cdist_Q[ind] = _cdist_Q(X[q], X[p], M_hat[q])
+                ind += 1
+        cdist = 
     return
 
 
