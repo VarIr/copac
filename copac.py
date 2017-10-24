@@ -31,8 +31,8 @@ def _cdist(P, Q, Mhat_P):
     save some computation, as we can first take the maximum of
     two cdists, and then take the root of the 'winner' only.
     """
-    PQ_diff = P - Q
-    return PQ_diff @ Mhat_P @ PQ_diff.T
+    PQ_diff = P[np.newaxis, :] - Q
+    return (PQ_diff @ Mhat_P * PQ_diff).sum(axis=1)
 
 
 def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
@@ -139,19 +139,28 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     used_y = np.zeros_like(y, dtype=bool)
     for D in Ds:
         n_D = D.shape[0]
-        cdist = -np.ones((n_D * (n_D - 1) // 2, 2), dtype=np.float)
-        ind = 0
+        cdist_P = -np.ones(n_D * (n_D - 1) // 2, dtype=np.float)
+        cdist_Q = -np.ones((n_D, n_D), dtype=np.float)
+        start = 0
         # Calculate triu part of distance matrix
         for i in range(0, n_D - 1):
             p = D[i]
-            # TODO vectorize inner loop
-            for j in range(i + 1, n_D):
-                q = D[j]
-                cdist[ind, 0] = _cdist(X[p], X[q], M_hat[p])
-                cdist[ind, 1] = _cdist(X[q], X[p], M_hat[q])
-                ind += 1
+            # Vectorized inner loop
+            q = D[i + 1:n_D]
+            stop = start + n_D - i - 1
+            cdist_P[start:stop] = _cdist(X[p], X[q], M_hat[p])
+            start = stop
+        # Calculate tril part of distance matrix
+        for i in range(1, n_D):
+            q = D[i]
+            p = D[0:i]
+            cdist_Q[i, :i] = _cdist(X[q], X[p], M_hat[q])
+        # Extract tril to 1D array
+        # TODO simplify...
+        cdist_Q = cdist_Q.T[np.triu_indices_from(cdist_Q, k=1)]
+        cdist = np.block([[cdist_P], [cdist_Q]])
         # Square root of the higher value of cdist_P, cdist_Q
-        cdist = np.sqrt(cdist.max(axis=1))
+        cdist = np.sqrt(cdist.max(axis=0))
 
         # Perform DBSCAN with full distance matrix
         cdist = squareform(cdist)
