@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+
 """
 COPAC: Correlation Partition Clustering
 """
@@ -13,14 +13,13 @@ COPAC: Correlation Partition Clustering
 from multiprocessing import cpu_count
 
 import numpy as np
-from scipy import sparse
 from scipy import linalg as LA
 from scipy.spatial.distance import squareform
 
 from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster.dbscan_ import dbscan
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils import check_array, check_consistent_length
+from sklearn.utils import check_array
 
 
 def _cdist(P, Q, Mhat_P):
@@ -106,34 +105,34 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     M_hat = list()
 
     # Get nearest neighbors
-    nn = NearestNeighbors(n_neighbors=k, metric=metric,
-                          n_jobs=n_jobs)
+    nn = NearestNeighbors(n_neighbors=k, metric=metric, algorithm=algorithm,
+                          leaf_size=leaf_size, metric_params=metric_params,
+                          p=p, n_jobs=n_jobs)
     nn.fit(X)
     knns = nn.kneighbors(return_distance=False)
     for P, knn in enumerate(knns):
         N_P = X[knn]
 
         # Corr. cluster cov. matrix
-        # TODO Is this an input parameter?
-        features = ... #[0, 1, 2, ...]   # subset of dimensions
-        Sigma_C = np.cov(N_P[:, features], rowvar=False, ddof=0)
+        Sigma = np.cov(N_P[:, :], rowvar=False, ddof=0)
 
         # Decompose spsd matrix, and sort Eigenvalues descending
-        E_C, V_C = LA.eigh(Sigma_C)
-        E_C = np.sort(E_C)[::-1]
+        E, V = LA.eigh(Sigma)
+        del Sigma
+        E = np.sort(E)[::-1]
 
         # Local correlation dimension
-        explanation_portion = np.cumsum(E_C) / E_C.sum()
+        explanation_portion = np.cumsum(E) / E.sum()
         lambda_P = np.searchsorted(explanation_portion, alpha, side='left')
         lambda_P += 1
         lambda_[P] = lambda_P
         # Correlation distance matrix
-        E_hat = (np.arange(1, d + 1) > lambda_[P]).astype(int)
-        M_hat.append(V_C @ np.diag(E_hat) @ V_C.T)
-        
+        E_hat = (np.arange(1, d + 1) > lambda_P).astype(int)
+        M_hat.append(V @ np.diag(E_hat) @ V.T)
+
     # Group pts by corr. dim.
     argsorted = np.argsort(lambda_)
-    edges, _ = np.histogram(lambda_[argsorted], bins=np.arange(d+2))
+    edges, _ = np.histogram(lambda_[argsorted], bins=np.arange(1, d + 2))
     Ds = np.split(argsorted, np.cumsum(edges))
     # Loop over partitions according to local corr. dim.
     max_label = 0
@@ -162,7 +161,7 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
         # Each DBSCAN run is unaware of previous ones,
         # so we need to keep track of previous cluster IDs
         y_D = labels + max_label
-        new_labels = np.unique(labels[labels>=0]).size
+        new_labels = np.unique(labels[labels >= 0]).size
         max_label += new_labels
         # TODO check correct indexing of label array `y`
         y[D] = y_D
@@ -229,7 +228,9 @@ class COPAC(BaseEstimator, ClusterMixin):
     Minnesota, USA (2007), pp. 413–418.
     """
 
-    def __init__(self, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean', metric_params=None, algorithm='auto', leaf_size=30, p=None, n_jobs=1):
+    def __init__(self, k=10, mu=5, eps=0.5, alpha=0.85,
+                 metric='euclidean', metric_params=None, algorithm='auto',
+                 leaf_size=30, p=None, n_jobs=1):
         self.k = k
         self.mu = mu
         self.eps = eps
@@ -241,7 +242,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         self.p = p
         self.n_jobs = n_jobs
 
-    def fit(self, X, y=None, sample_weight=None):
+    def fit(self, X, y=None, sample_weight=None):  # @UnusedVariable pylint: disable=unused-argument
         """Perform COPAC clustering from features.
 
         Parameters
@@ -257,11 +258,11 @@ class COPAC(BaseEstimator, ClusterMixin):
         """
         X = check_array(X)
         clust = copac(X, sample_weight=sample_weight,
-                       **self.get_params())
-        self.labels_ = clust
+                      **self.get_params())
+        self.labels_ = clust  #pylint: disable=attribute-defined-outside-init
         return self
 
-    def fit_predict(self, X, y=None, sample_weight=None):
+    def fit_predict(self, X, y=None, sample_weight=None):  #pylint: disable=arguments-differ
         """Performs clustering on X and returns cluster labels.
 
         Parameters
@@ -282,64 +283,3 @@ class COPAC(BaseEstimator, ClusterMixin):
         """
         self.fit(X, sample_weight=sample_weight)
         return self.labels_
-
-
-def _gdbscan(X, n_pred, min_card, w_card):
-	""" TODO write docstring
-
-	Parameters
-	----------
-	X : array of shape (n_samples, n_features)
-		A feature array.
-	n_pred : ...
-		...
-	min_card : ...
-		...
-	w_card : ...
-		...
-
-	Returns
-	-------
-	...
-    """
-    NOISE = -2
-    UNCLASSIFIED = -1
-    n, d = X.shape
-    y = UNCLASSIFIED * np.ones(n, dtype=np.uint32)
-    noise = range(n)
-    cluster_id = next(noise)
-    for i, object_ in enumerate(X):
-		if y[i] == UNCLASSIFIED:
-			if _gdbscan_expand_cluster(X, y, i, cluster_id, n_pred, 
-				min_card, w_card, UNCLASSIFIED, NOISE):
-				cluster_id = next(noise)
-	return y
-
-def _gdbscan_expand_cluster(X, y, i, cluster_id, n_pred, min_card, 
-							w_card, UNCLASSIFIED, NOISE):
-	""" TODO write (short) docstring """
-	if w_card(object_) <= 0:
-		y[i] = UNCLASSIFIED
-		return False
-
-	seeds = _gdbscan_neighborhood(X, i, n_pred)
-	if w_card(seeds) < min_card:
-		y[i] = NOISE
-		return False
-
-	y[i] = cluster_id
-	seeds.delete(i)
-	while len(seeds):
-		j = seeds[0]
-		result = _gdbscan_neighborhood(X, j, n_pred)
-		if w_card(result) >= min_card:
-			for P in result:
-				if w_card(P) > 0 and y[P] < 0:
-					if y[P] == UNCLASSIFIED:
-						seeds.append(P)
-					y[P] = cluster_id
-		seeds.delete(j)
-	return True
-
-
-
