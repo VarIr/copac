@@ -1,0 +1,4 @@
+
+include *.txt
+include README.*
+recursive-include cluster *.py
