@@ -1,5 +1,5 @@
 .. image:: https://travis-ci.com/VarIr/data_mining.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
-    :target: https://travis-ci.org/VarIr/data_mining
+    :target: https://travis-ci.com/VarIr/data_mining
 
 Data Mining
 ===========
@@ -11,14 +11,10 @@ Assignment 1 - High dimensional data clustering with COPAC
 
 We implement COPAC (Correlation Partition Clustering), which
 
-- first, computes the local correlation dimensionality
-  based on the largest eigenvalues
-- second, partitions the data set based on this dimension
-- third, calculates a Euclidean distance variant weighted with
-  the correlation dimension, called correlation distance
-- fourth, further clusters objects within each partition with
-  Generalized DBSCAN, requiring a minimum number of objects to
-  be within eps range for each core point.
+#. computes the local correlation dimensionality based on the largest eigenvalues
+#. partitions the data set based on this dimension
+#. calculates a Euclidean distance variant weighted with the correlation dimension, called correlation distance
+#. further clusters objects within each partition with Generalized DBSCAN, requiring a minimum number of objects to be within eps range for each core point.
 
 
 Installation
