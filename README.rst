@@ -5,3 +5,75 @@ Data Mining
 ===========
 
 Univie VU Data Mining course - Programming assignments
+
+Assignment 1 - High dimensional data clustering with COPAC
+----------------------------------------------------------
+
+We implement COPAC (Correlation Partition Clustering), which
+
+- first, computes the local correlation dimensionality
+  based on the largest eigenvalues
+- second, partitions the data set based on this dimension
+- third, calculates a Euclidean distance variant weighted with
+  the correlation dimension, called correlation distance
+- fourth, further clusters objects within each partition with
+  Generalized DBSCAN, requiring a minimum number of objects to
+  be within eps range for each core point.
+
+
+Installation
+------------
+
+Make sure you have a working Python3 environment (at least 3.5) with
+numpy, scipy and scikit-learn packages. Consider using 
+`Anaconda <https://www.anaconda.com/download/#linux>`_.
+You can install COPAC from within the cloned directory with
+
+.. code-block:: bash
+
+  python3 setup.py install
+
+COPAC is then available through the `cluster` package (we might
+want to change that name, though).
+
+Example
+-------
+
+COPAC usage follows scikit-learn's cluster API. (At some point,
+we might consider releasing this to PyPI, so that people can
+install COPAC with pip. Theoretically, we could create a PR for
+scikit-learn, but chances that they would accept it are slim.)
+
+.. code-block:: python
+
+  from cluster import COPAC
+  # load some X here ...
+  copac = COPAC(k=10, mu=5, eps=.5, alpha=.85)
+  y_pred = copac.fit_transform(X)
+
+Documentation
+-------------
+
+Documentation is not (but might at some point be) available online: 
+http://copac.readthedocs.io/en/latest/index.html
+
+
+Citation
+--------
+
+If you use the Hub Toolbox in your scientific publication, please cite:
+
+.. code-block:: text
+
+	@article{Achtert2007,
+             author = {Achtert, E and Bohm, C and Kriegel, H P and Kroger, P and Zimek, A},
+             title = {{Robust, Complete, and Efficient Correlation Clustering}},
+             journal = {Proceedings of the Seventh Siam International Conference on Data Mining},
+             year = {2007},
+             pages = {413--418}
+    }
+
+
+License
+-------
+No license so far.
