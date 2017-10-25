@@ -61,7 +61,7 @@ http://copac.readthedocs.io/en/latest/index.html
 Citation
 --------
 
-If you use the Hub Toolbox in your scientific publication, please cite:
+The original publication of COPAC.
 
 .. code-block:: text
 
