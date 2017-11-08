@@ -29,16 +29,12 @@ You can install COPAC from within the cloned directory with
 
   python3 setup.py install
 
-COPAC is then available through the `cluster` package (we might
-want to change that name, though).
+COPAC is then available through the `cluster` package.
 
 Example
 -------
 
-COPAC usage follows scikit-learn's cluster API. (At some point,
-we might consider releasing this to PyPI, so that people can
-install COPAC with pip. Theoretically, we could create a PR for
-scikit-learn, but chances that they would accept it are slim.)
+COPAC usage follows scikit-learn's cluster API.
 
 .. code-block:: python
 
