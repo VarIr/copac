@@ -50,8 +50,8 @@ scikit-learn, but chances that they would accept it are slim.)
 Documentation
 -------------
 
-Documentation is not (but might at some point be) available online: 
-http://copac.readthedocs.io/en/latest/index.html
+Documentation is available online: 
+https://www.overleaf.com/11965081hkrdskvjtrvh
 
 
 Citation
