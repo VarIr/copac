@@ -6,7 +6,7 @@ COPAC: Correlation Partition Clustering
 
 # Author: Roman Feldbauer <roman.feldbauer@ofai.at>
 # Author: Jiri Mauritz <jirmauritz at gmail dot com>
-#         ... <>
+# Author: Thomas Turic <thomas.turic@outlook.com>
 #         ... <>
 #
 # License: ...
