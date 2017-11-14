@@ -5,11 +5,10 @@ COPAC: Correlation Partition Clustering
 """
 
 # Author: Roman Feldbauer <roman.feldbauer@ofai.at>
-# Author: Jiri Mauritz <jirmauritz at gmail dot com>
-# Author: Thomas Turic <thomas.turic@outlook.com>
-#         ... <>
-#
-# License: ...
+#         Elisabeth Hartel
+#         Jiri Mauritz <jirmauritz at gmail dot com>
+#         Thomas Turic <thomas.turic@outlook.com>
+
 from multiprocessing import cpu_count
 
 import numpy as np
@@ -23,7 +22,11 @@ from sklearn.utils import check_array
 
 
 def _cdist(P, Q, Mhat_P):
-    """ Correlation distance between P and Q (not symmetric).
+    """ Correlation distance.
+
+    Compute the corr. distance between a single sample `P` and several
+    samples `Q` (vectorization for reduced runtime). The correlation
+    distance is not symmetric!
 
     Notes
     -----
@@ -39,7 +42,6 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
           metric_params=None, algorithm='auto', leaf_size=30, p=None,
           n_jobs=1, sample_weight=None):
     """Perform COPAC clustering from vector array.
-    Read more in the :ref:`User Guide <copac>`.
 
     Parameters
     ----------
@@ -100,7 +102,7 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     if n_jobs == -1:
         n_jobs = cpu_count()
 
-    # Calculating M^ just once requires lots of memory...
+    # Calculating M^ just once requires more memory, but saves computation
     lambda_ = np.zeros(n, dtype=int)
     M_hat = list()
 
@@ -113,12 +115,11 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     for P, knn in enumerate(knns):
         N_P = X[knn]
 
-        # Corr. cluster cov. matrix
+        # Correlation cluster covariance matrix
         Sigma = np.cov(N_P[:, :], rowvar=False, ddof=0)
 
         # Decompose spsd matrix, and sort Eigenvalues descending
         E, V = LA.eigh(Sigma)
-        del Sigma
         E = np.sort(E)[::-1]
 
         # Local correlation dimension
@@ -130,13 +131,13 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
         E_hat = (np.arange(1, d + 1) > lambda_P).astype(int)
         M_hat.append(V @ np.diag(E_hat) @ V.T)
 
-    # Group pts by corr. dim.
+    # Group points by corr. dim.
     argsorted = np.argsort(lambda_)
     edges, _ = np.histogram(lambda_[argsorted], bins=np.arange(1, d + 2))
     Ds = np.split(argsorted, np.cumsum(edges))
     # Loop over partitions according to local corr. dim.
     max_label = 0
-    used_y = np.zeros_like(y, dtype=bool)
+    used_y = np.zeros_like(y, dtype=int)
     for D in Ds:
         n_D = D.shape[0]
         cdist_P = -np.ones(n_D * (n_D - 1) // 2, dtype=np.float)
@@ -172,16 +173,15 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
         y_D = labels + max_label
         new_labels = np.unique(labels[labels >= 0]).size
         max_label += new_labels
-        # TODO check correct indexing of label array `y`
+        # Set cluster labels in `y`
         y[D] = y_D
-        used_y[D] = True
-    assert np.all(used_y), "Not all samples got labels!"
+        used_y[D] += 1
+    assert np.all(used_y == 1), "Not all samples were handled exactly once!"
     return y
 
 
 class COPAC(BaseEstimator, ClusterMixin):
     """Perform COPAC clustering from vector array.
-    Read more in the :ref:`User Guide <copac>`.
 
     Parameters
     ----------
@@ -251,7 +251,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         self.p = p
         self.n_jobs = n_jobs
 
-    def fit(self, X, y=None, sample_weight=None):  # @UnusedVariable pylint: disable=unused-argument
+    def fit(self, X, y=None, sample_weight=None):
         """Perform COPAC clustering from features.
 
         Parameters
@@ -263,15 +263,16 @@ class COPAC(BaseEstimator, ClusterMixin):
             ``min_samples`` is by itself a core sample; a sample with negative
             weight may inhibit its eps-neighbor from being core.
             Note that weights are absolute, and default to 1.
+            CURRENTLY IGNORED.
         y : Ignored
         """
         X = check_array(X)
         clust = copac(X, sample_weight=sample_weight,
                       **self.get_params())
-        self.labels_ = clust  #pylint: disable=attribute-defined-outside-init
+        self.labels_ = clust
         return self
 
-    def fit_predict(self, X, y=None, sample_weight=None):  #pylint: disable=arguments-differ
+    def fit_predict(self, X, y=None, sample_weight=None):
         """Performs clustering on X and returns cluster labels.
 
         Parameters
@@ -283,6 +284,7 @@ class COPAC(BaseEstimator, ClusterMixin):
             ``min_samples`` is by itself a core sample; a sample with negative
             weight may inhibit its eps-neighbor from being core.
             Note that weights are absolute, and default to 1.
+            CURRENTLY IGNORED.
         y : Ignored
 
         Returns
