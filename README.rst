@@ -49,6 +49,8 @@ Documentation
 Documentation is available online: 
 https://www.overleaf.com/11965081hkrdskvjtrvh
 
+PDF is uploaded: documentation_group08.pdf
+
 
 Citation
 --------
