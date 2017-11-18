@@ -51,6 +51,10 @@ https://www.overleaf.com/11965081hkrdskvjtrvh
 
 PDF is uploaded: documentation_group08.pdf
 
+Implementation
+--------------
+Published in GitHub:
+https://github.com/VarIr/data_mining
 
 Citation
 --------
