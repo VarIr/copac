@@ -46,10 +46,7 @@ COPAC usage follows scikit-learn's cluster API.
 Documentation
 -------------
 
-Documentation is available online: 
-https://www.overleaf.com/11965081hkrdskvjtrvh
-
-PDF is uploaded: documentation_group08.pdf
+See the PDF documentation_group08.pdf
 
 Implementation
 --------------
