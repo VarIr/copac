@@ -46,7 +46,7 @@ COPAC usage follows scikit-learn's cluster API.
 Documentation
 -------------
 
-See the PDF documentation_group08.pdf
+See the `PDF <https://github.com/VarIr/data_mining/blob/master/documentation_group08.pdf>`_.
 
 Implementation
 --------------
