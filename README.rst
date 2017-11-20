@@ -71,4 +71,4 @@ The original publication of COPAC.
 
 License
 -------
-No license so far.
+This work is free open source software licensed under GPLv3.
