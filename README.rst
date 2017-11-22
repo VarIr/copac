@@ -46,9 +46,12 @@ COPAC usage follows scikit-learn's cluster API.
 Documentation
 -------------
 
-Documentation is available online: 
-https://www.overleaf.com/11965081hkrdskvjtrvh
+See the `PDF <https://github.com/VarIr/data_mining/blob/master/documentation_group08.pdf>`_.
 
+Implementation
+--------------
+Published in GitHub:
+https://github.com/VarIr/data_mining
 
 Citation
 --------
@@ -68,4 +71,4 @@ The original publication of COPAC.
 
 License
 -------
-No license so far.
+This work is free open source software licensed under GPLv3.
