@@ -41,7 +41,7 @@ COPAC usage follows scikit-learn's cluster API.
   from cluster import COPAC
   # load some X here ...
   copac = COPAC(k=10, mu=5, eps=.5, alpha=.85)
-  y_pred = copac.fit_transform(X)
+  y_pred = copac.fit_predict(X)
 
 Documentation
 -------------
