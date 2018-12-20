@@ -51,7 +51,7 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
         Size of local neighborhood for local correlation dimensionality.
         The paper suggests k >= 3 * n_features.
     mu : int, optional, default=5
-        Minimum number of points in a cluster with mu <= k.
+        Minimum number of points in a copac with mu <= k.
     eps : float, optional, default=0.5
         Neighborhood predicate, so that neighbors are closer than `eps`.
     alpha : float in ]0,1[, optional, default=0.85
@@ -115,7 +115,7 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     for P, knn in enumerate(knns):
         N_P = X[knn]
 
-        # Correlation cluster covariance matrix
+        # Correlation copac covariance matrix
         Sigma = np.cov(N_P[:, :], rowvar=False, ddof=0)
 
         # Decompose spsd matrix, and sort Eigenvalues descending
@@ -169,11 +169,11 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
                        metric='precomputed', n_jobs=n_jobs)
         _, labels = clust
         # Each DBSCAN run is unaware of previous ones,
-        # so we need to keep track of previous cluster IDs
+        # so we need to keep track of previous copac IDs
         y_D = labels + max_label
         new_labels = np.unique(labels[labels >= 0]).size
         max_label += new_labels
-        # Set cluster labels in `y`
+        # Set copac labels in `y`
         y[D] = y_D
         used_y[D] += 1
     assert np.all(used_y == 1), "Not all samples were handled exactly once!"
@@ -189,7 +189,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         Size of local neighborhood for local correlation dimensionality.
         The paper suggests k >= 3 * n_features.
     mu : int, optional, default=5
-        Minimum number of points in a cluster with mu <= k.
+        Minimum number of points in a copac with mu <= k.
     eps : float, optional, default=0.5
         Neighborhood predicate, so that neighbors are closer than `eps`.
     alpha : float in ]0,1[, optional, default=0.85
@@ -273,7 +273,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         return self
 
     def fit_predict(self, X, y=None, sample_weight=None):
-        """Performs clustering on X and returns cluster labels.
+        """Performs clustering on X and returns copac labels.
 
         Parameters
         ----------
@@ -290,7 +290,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         Returns
         -------
         y : ndarray, shape (n_samples,)
-            cluster labels
+            copac labels
         """
         self.fit(X, sample_weight=sample_weight)
         return self.labels_

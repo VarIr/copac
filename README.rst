@@ -1,13 +1,10 @@
-.. image:: https://travis-ci.com/VarIr/data_mining.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
-    :target: https://travis-ci.com/VarIr/data_mining
+.. image:: https://travis-ci.com/VarIr/copac.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
+    :target: https://travis-ci.com/VarIr/copac
 
-Data Mining
-===========
 
-Univie VU Data Mining course - Programming assignments
 
-Assignment 1 - High dimensional data clustering with COPAC
-----------------------------------------------------------
+High dimensional data clustering with COPAC
+===========================================
 
 We implement COPAC (Correlation Partition Clustering), which
 
@@ -20,7 +17,7 @@ We implement COPAC (Correlation Partition Clustering), which
 Installation
 ------------
 
-Make sure you have a working Python3 environment (at least 3.5) with
+Make sure you have a working Python3 environment (at least 3.6) with
 numpy, scipy and scikit-learn packages. Consider using 
 `Anaconda <https://www.anaconda.com/download/#linux>`_.
 You can install COPAC from within the cloned directory with
@@ -29,7 +26,7 @@ You can install COPAC from within the cloned directory with
 
   python3 setup.py install
 
-COPAC is then available through the `cluster` package.
+COPAC is then available through the `copac` package.
 
 Example
 -------
@@ -38,20 +35,16 @@ COPAC usage follows scikit-learn's cluster API.
 
 .. code-block:: python
 
-  from cluster import COPAC
+  from copac import COPAC
   # load some X here ...
   copac = COPAC(k=10, mu=5, eps=.5, alpha=.85)
   y_pred = copac.fit_predict(X)
 
-Documentation
--------------
-
-See the `PDF <https://github.com/VarIr/data_mining/blob/master/documentation_group08.pdf>`_.
 
 Implementation
 --------------
 Published in GitHub:
-https://github.com/VarIr/data_mining
+https://github.com/VarIr/copac
 
 Citation
 --------

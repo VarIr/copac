@@ -20,7 +20,7 @@ def elki_copac(X, k=10, mu=5, eps=0.5, alpha=0.85):
             Size of local neighborhood for local correlation dimensionality.
             The paper suggests k >= 3 * n_features.
         mu : int, optional, default=5
-            Minimum number of points in a cluster with mu <= k.
+            Minimum number of points in a copac with mu <= k.
         eps : float, optional, default=0.5
             Neighborhood predicate, so that neighbors are closer than `eps`.
         alpha : float in ]0,1[, optional, default=0.85
@@ -57,7 +57,7 @@ def elki_copac(X, k=10, mu=5, eps=0.5, alpha=0.85):
     elki_output = output.decode("utf-8")
     # initialize array of ids and labels
     Y_pred = np.array([]).reshape(0, 2)
-    # for each cluster, split by regex from output
+    # for each copac, split by regex from output
     for i, cluster in enumerate(elki_output.split("Cluster: Cluster")[1:]):
         # find point coordinates in output
         IDs_list = re.findall(r"ID=(\d+)", cluster)
