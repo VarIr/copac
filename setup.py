@@ -42,7 +42,7 @@ except ImportError:
 
 setup(
     name="copac",
-    version="0.1",
+    version="0.2",
     author="Roman Feldbauer",
     author_email="roman.feldbauer@ofai.at",
     maintainer="Roman Feldbauer",
