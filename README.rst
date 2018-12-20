@@ -1,5 +1,7 @@
 .. image:: https://travis-ci.com/VarIr/copac.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
     :target: https://travis-ci.com/VarIr/copac
+.. image:: https://zenodo.org/badge/106809618.svg
+   :target: https://zenodo.org/badge/latestdoi/106809618
 
 
 
@@ -53,7 +55,7 @@ The original publication of COPAC.
 
 .. code-block:: text
 
-	@article{Achtert2007,
+    @article{Achtert2007,
              author = {Achtert, E and Bohm, C and Kriegel, H P and Kroger, P and Zimek, A},
              title = {{Robust, Complete, and Efficient Correlation Clustering}},
              journal = {Proceedings of the Seventh Siam International Conference on Data Mining},
