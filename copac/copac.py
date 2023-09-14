@@ -16,7 +16,10 @@ from scipy import linalg as LA
 from scipy.spatial.distance import squareform
 
 from sklearn.base import BaseEstimator, ClusterMixin
-from sklearn.cluster.dbscan_ import dbscan
+try:     # for sklearn < 0.23
+    from sklearn.cluster.dbscan_ import dbscan
+except:  # for sklearn >= 0.23
+    from sklearn.cluster._dbscan import dbscan
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_array
 
