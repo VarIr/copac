@@ -13,19 +13,18 @@ install:
 - conda config --set always_yes yes --set changeps1 no
 - conda update -q conda
 - conda info -a
-- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy scikit-learn
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION numpy scipy scikit-learn pytest
   coverage
 - source activate test-environment
 - pip install coveralls nose
-- python setup.py build
-- python setup.py install
+- python -m pip install .
 script:
-- python setup.py test
-- coverage run setup.py test
+- pytest .
+- coverage
 - coverage combine # required for multiprocessing
 after_success:
 - coveralls
 cache:
 - apt
 - directories:
-- "$HOME/.cache/pip"
+  - "$HOME/.cache/pip"

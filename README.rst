@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.com/VarIr/copac.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
-    :target: https://travis-ci.com/VarIr/copac
+.. image:: https://travis-ci.org/VarIr/copac.svg?token=Pv7ns6A7X34baaBVUTz8&branch=master
+    :target: https://travis-ci.org/VarIr/copac
 .. image:: https://zenodo.org/badge/106809618.svg
    :target: https://zenodo.org/badge/latestdoi/106809618
 
@@ -13,20 +13,20 @@ We implement COPAC (Correlation Partition Clustering), which
 #. computes the local correlation dimensionality based on the largest eigenvalues
 #. partitions the data set based on this dimension
 #. calculates a Euclidean distance variant weighted with the correlation dimension, called correlation distance
-#. further clusters objects within each partition with Generalized DBSCAN, requiring a minimum number of objects to be within eps range for each core point.
+#. further clusters objects within each partition with Generalized DBSCAN,
+   requiring a minimum number of objects to be within eps range for each core point.
 
 
 Installation
 ------------
 
-Make sure you have a working Python3 environment (at least 3.6) with
-numpy, scipy and scikit-learn packages. Consider using 
-`Anaconda <https://www.anaconda.com/download/#linux>`_.
-You can install COPAC from within the cloned directory with
+Clone this repository and ``pip install`` like so:
 
 .. code-block:: bash
 
-  python3 setup.py install
+  git clone https://github.com/VarIr/copac.git
+  cd copac
+  python3 -m pip install .
 
 COPAC is then available through the `copac` package.
 
