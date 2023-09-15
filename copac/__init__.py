@@ -1,3 +1,6 @@
+__version__ = "0.3.0"
+
+# Version definition MUST precede any imports here
 from .copac import COPAC, copac
 
 __all__ = [
@@ -5,4 +8,3 @@ __all__ = [
     'copac',
     '__version__',
 ]
-__version__ = "0.3.0"
