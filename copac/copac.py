@@ -4,7 +4,7 @@
 COPAC: Correlation Partition Clustering
 """
 
-# Author: Roman Feldbauer <roman.feldbauer@ofai.at>
+# Author: Roman Feldbauer <sci@feldbauer.org>
 #         Elisabeth Hartel
 #         Jiri Mauritz <jirmauritz at gmail dot com>
 #         Thomas Turic <thomas.turic@outlook.com>
@@ -16,10 +16,7 @@ from scipy import linalg as LA
 from scipy.spatial.distance import squareform
 
 from sklearn.base import BaseEstimator, ClusterMixin
-try:     # for sklearn < 0.23
-    from sklearn.cluster.dbscan_ import dbscan
-except:  # for sklearn >= 0.23
-    from sklearn.cluster._dbscan import dbscan
+from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import check_array
 
@@ -41,9 +38,12 @@ def _cdist(P, Q, Mhat_P):
     return (PQ_diff @ Mhat_P * PQ_diff).sum(axis=1)
 
 
-def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
-          metric_params=None, algorithm='auto', leaf_size=30, p=None,
-          n_jobs=1, sample_weight=None):
+def copac(X: np.ndarray, *,
+          k: int = 10, mu: int = 5, eps: float = 0.5, alpha: float = 0.85,
+          metric: str = 'euclidean', metric_params=None,
+          algorithm: str = 'auto', leaf_size: int = 30, p: float = None,
+          n_jobs: int = 1, sample_weight: np.ndarray=None,
+          return_core_pts: bool = False):
     """Perform COPAC clustering from vector array.
 
     Parameters
@@ -84,12 +84,16 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     n_jobs : int, optional, default=1
         Number of parallel processes. Use all cores with n_jobs=-1.
     sample_weight : None
-        Currently ignored
+        Sample weights
+    return_core_pts : bool
+        Return clusters labels and core point indices for each correlation dimension.
 
     Returns
     -------
     labels : array [n_samples]
         Cluster labels for each point. Noisy samples are given the label -1.
+    core_pts_ind : dict[int, array]
+        Indices of core points for each correlation dimension (only if ``return_core_pts=True``).
 
     References
     ----------
@@ -99,9 +103,9 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     Conference on Data Mining, April 26-28, 2007, Minneapolis,
     Minnesota, USA (2007), pp. 413–418.
     """
-    X = check_array(X)
     n, d = X.shape
-    y = -np.ones(n, dtype=np.int)
+    data_dtype = X.dtype
+    y = -np.ones(n, dtype=int)
     if n_jobs == -1:
         n_jobs = cpu_count()
 
@@ -141,10 +145,11 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
     # Loop over partitions according to local corr. dim.
     max_label = 0
     used_y = np.zeros_like(y, dtype=int)
-    for D in Ds:
+    core_pts = {}
+    for dim, D in enumerate(Ds, start=1):
         n_D = D.shape[0]
-        cdist_P = -np.ones(n_D * (n_D - 1) // 2, dtype=np.float)
-        cdist_Q = -np.ones((n_D, n_D), dtype=np.float)
+        cdist_P = -np.ones(n_D * (n_D - 1) // 2, dtype=data_dtype)
+        cdist_Q = -np.ones((n_D, n_D), dtype=data_dtype)
         start = 0
         # Calculate triu part of distance matrix
         for i in range(0, n_D - 1):
@@ -168,9 +173,10 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
 
         # Perform DBSCAN with full distance matrix
         cdist = squareform(cdist)
-        clust = dbscan(X=cdist, eps=eps, min_samples=mu,
-                       metric='precomputed', n_jobs=n_jobs)
-        _, labels = clust
+        dbscan = DBSCAN(eps=eps, min_samples=mu, metric="precomputed", n_jobs=n_jobs)
+        labels = dbscan.fit_predict(X=cdist, sample_weight=sample_weight)
+        core_pts[dim] = dbscan.core_sample_indices_
+
         # Each DBSCAN run is unaware of previous ones,
         # so we need to keep track of previous copac IDs
         y_D = labels + max_label
@@ -180,7 +186,11 @@ def copac(X, k=10, mu=5, eps=0.5, alpha=0.85, metric='euclidean',
         y[D] = y_D
         used_y[D] += 1
     assert np.all(used_y == 1), "Not all samples were handled exactly once!"
-    return y
+
+    if return_core_pts:
+        return y, core_pts
+    else:
+        return y
 
 
 class COPAC(BaseEstimator, ClusterMixin):
@@ -254,7 +264,7 @@ class COPAC(BaseEstimator, ClusterMixin):
         self.p = p
         self.n_jobs = n_jobs
 
-    def fit(self, X, y=None, sample_weight=None):
+    def fit(self, X, y=None, sample_weight=None, return_core_pts=False):
         """Perform COPAC clustering from features.
 
         Parameters
@@ -268,14 +278,25 @@ class COPAC(BaseEstimator, ClusterMixin):
             Note that weights are absolute, and default to 1.
             CURRENTLY IGNORED.
         y : Ignored
+        return_core_pts : bool
+            Return cluster labels and core points per correlation dimension
         """
-        X = check_array(X)
-        clust = copac(X, sample_weight=sample_weight,
-                      **self.get_params())
+        X: np.ndarray = check_array(X)
+        result = copac(
+            X=X,
+            sample_weight=sample_weight,
+            return_core_pts=return_core_pts,
+            **self.get_params(),
+        )
+        if return_core_pts:
+            clust, core_pts = result
+            self.core_point_indices_ = core_pts
+        else:
+            clust = result
         self.labels_ = clust
         return self
 
-    def fit_predict(self, X, y=None, sample_weight=None):
+    def fit_predict(self, X, y=None, sample_weight=None, return_core_pts=False):
         """Performs clustering on X and returns copac labels.
 
         Parameters
@@ -289,11 +310,16 @@ class COPAC(BaseEstimator, ClusterMixin):
             Note that weights are absolute, and default to 1.
             CURRENTLY IGNORED.
         y : Ignored
+        return_core_pts : bool
+            Return cluster labels and core points per correlation dimension
 
         Returns
         -------
         y : ndarray, shape (n_samples,)
             copac labels
         """
-        self.fit(X, sample_weight=sample_weight)
-        return self.labels_
+        self.fit(X, sample_weight=sample_weight, return_core_pts=return_core_pts)
+        if return_core_pts:
+            return self.labels_, self.core_point_indices_
+        else:
+            return self.labels_
